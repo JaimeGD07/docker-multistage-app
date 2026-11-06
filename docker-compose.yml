@@ -1,0 +1,38 @@
+# Ecosistema: Next.js (frontend) + Laravel/PHP-FPM + Nginx (backend) + MySQL.
+# Fase 2: solo la base de datos. Los demás servicios se agregan en fases siguientes.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ecommerce_db
+    restart: unless-stopped
+    # utf8mb4 como juego de caracteres por defecto del servidor
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Define MYSQL_DATABASE en .env}
+      MYSQL_USER: ${MYSQL_USER:?Define MYSQL_USER en .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en .env}
+    # 3306 solo es visible dentro de la red de Docker: NO se publica al host.
+    expose:
+      - "3306"
+    volumes:
+      # Datos persistentes: sobreviven a `docker compose down` (sin -v)
+      - db_data:/var/lib/mysql
+      # Scripts SQL opcionales; se ejecutan solo en el primer arranque (volumen vacío)
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - backend_net
+
+volumes:
+  db_data:
+
+networks:
+  backend_net:
+    driver: bridge
