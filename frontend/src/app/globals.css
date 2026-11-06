@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/*
+ * Sistema de diseno "banco de pruebas": grafito azulado con un unico acento ambar,
+ * como el LED de estado de un equipo. El ambar se reserva para precio, foco y acciones.
+ */
+@theme inline {
+  --color-bg: #0f1320;
+  --color-panel: #161b2c;
+  --color-panel-2: #1d2338;
+  --color-line: #2b3350;
+  --color-line-strong: #3d476b;
+  --color-text: #e8ebf5;
+  --color-muted: #96a0bd;
+  --color-amber: #ffb224;
+  --color-amber-ink: #1a1200;
+  --color-ok: #4ade80;
+  --color-out: #ff7a7a;
+
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,4 @@
+# pnpm 11 bloquea los scripts de instalacion de dependencias hasta que se aprueban.
+# unrs-resolver (usado por eslint-config-next) necesita ejecutar su script de build.
+allowBuilds:
+  unrs-resolver: true
