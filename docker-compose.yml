@@ -1,5 +1,5 @@
 # Ecosistema: Next.js (frontend) + Laravel/PHP-FPM + Nginx (backend) + MySQL.
-# Fase 2: solo la base de datos. Los demás servicios se agregan en fases siguientes.
+# Fase 3: base de datos + backend (PHP-FPM + Nginx). El frontend se agrega después.
 
 services:
   db:
@@ -27,6 +27,62 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - backend_net
+
+  # --- Backend Laravel: PHP-FPM (solo accesible desde Nginx, puerto 9000 interno) ---
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ecommerce-api:latest
+    container_name: ecommerce_app
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-E-commerce API}
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Define APP_KEY en .env}
+      APP_URL: ${APP_URL:-http://localhost:8030}
+      JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
+      STRIPE_SECRET: ${STRIPE_SECRET:?Define STRIPE_SECRET en .env}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE}
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
+      L5_SWAGGER_GENERATE_ALWAYS: "false"
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+    expose:
+      - "9000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9000 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - backend_net
+
+  # --- Nginx: único punto de entrada HTTP de la API ---
+  nginx:
+    build:
+      context: ./backend
+      dockerfile: nginx/Dockerfile
+    image: ecommerce-nginx:latest
+    container_name: ecommerce_nginx
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8030}:8080"
+    depends_on:
+      app:
+        condition: service_healthy
     networks:
       - backend_net
 

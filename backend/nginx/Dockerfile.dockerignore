@@ -1,0 +1,5 @@
+# Lista de permitidos: del contexto ./backend solo entra lo que Nginx necesita.
+# (BuildKit da prioridad a este archivo sobre ../.dockerignore para nginx/Dockerfile)
+*
+!public
+!nginx/default.conf
