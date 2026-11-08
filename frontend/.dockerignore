@@ -1,0 +1,27 @@
+# Contexto de build de la imagen del frontend.
+# Control de versiones
+.git
+.gitignore
+
+# Secretos: NUNCA entran a la imagen
+.env
+.env.*
+
+# Dependencias y artefactos (se regeneran dentro del build)
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# No se usan en el build ni en runtime
+docs
+scripts
+README.md
+eslint.config.mjs
+
+# Archivos de Docker
+Dockerfile
+.dockerignore

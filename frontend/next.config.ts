@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Genera .next/standalone: servidor mínimo con solo las dependencias que se usan
+  output: "standalone",
   cacheComponents: true,
   partialPrefetching: true,
   images: {

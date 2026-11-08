@@ -1,5 +1,5 @@
 # Ecosistema: Next.js (frontend) + Laravel/PHP-FPM + Nginx (backend) + MySQL.
-# Fase 3: base de datos + backend (PHP-FPM + Nginx). El frontend se agrega después.
+# Fase 4: base de datos + backend (PHP-FPM + Nginx) + frontend (Next.js).
 
 services:
   db:
@@ -82,6 +82,28 @@ services:
       - "${API_PORT:-8030}:8080"
     depends_on:
       app:
+        condition: service_healthy
+    networks:
+      - backend_net
+
+  # --- Frontend Next.js (servidor standalone) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Clave PÚBLICA de Stripe: se incrusta en el JS del navegador en el build
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:?Define NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY en .env}
+    image: ecommerce-frontend:latest
+    container_name: ecommerce_frontend
+    restart: unless-stopped
+    environment:
+      # El servidor de Next llama a la API por la red interna de Docker (a través de Nginx)
+      API_BASE_URL: http://nginx:8080/api
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      nginx:
         condition: service_healthy
     networks:
       - backend_net
