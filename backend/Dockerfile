@@ -46,6 +46,10 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && apk del .build-deps \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+# Verificación en build: falla si falta alguna extensión que exige Laravel.
+# Solo pdo_mysql y opcache se instalan arriba; el resto ya viene compilada en la imagen oficial.
+RUN php -r 'foreach (["pdo_mysql","mbstring","openssl","tokenizer","xml","ctype","json"] as $e) { if (!extension_loaded($e)) { fwrite(STDERR, "Falta la extension PHP: $e\n"); exit(1); } } echo "Extensiones PHP requeridas: OK\n";'
+
 COPY docker/php-custom.ini "$PHP_INI_DIR/conf.d/zz-app.ini"
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 

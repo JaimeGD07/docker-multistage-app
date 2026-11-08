@@ -10,7 +10,7 @@
 #
 # Puertos publicados en el host (solo estos dos):
 #   ${FRONTEND_PORT:-3000}  tienda (Next.js)
-#   ${API_PORT:-8030}       API Laravel y Swagger (/docs) a través de Nginx
+#   ${API_PORT:-8000}       API Laravel y Swagger (/api/documentation) a través de Nginx
 # =============================================================================
 
 # Rotación de logs: evita que los logs de los contenedores crezcan sin límite
@@ -77,7 +77,7 @@ services:
       APP_ENV: production
       APP_DEBUG: "false"
       APP_KEY: ${APP_KEY:?Define APP_KEY en .env}
-      APP_URL: ${APP_URL:-http://localhost:8030}
+      APP_URL: ${APP_URL:-http://localhost:8000}
       JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
       STRIPE_SECRET: ${STRIPE_SECRET:?Define STRIPE_SECRET en .env}
       DB_CONNECTION: mysql
@@ -119,7 +119,7 @@ services:
     container_name: ecommerce_nginx
     restart: unless-stopped
     ports:
-      - "${API_PORT:-8030}:8080"
+      - "${API_PORT:-8000}:8080"
     depends_on:
       app:
         condition: service_healthy

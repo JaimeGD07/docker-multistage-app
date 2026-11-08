@@ -19,8 +19,8 @@ use OpenApi\Attributes as OA;
     bearerFormat: "JWT"
 )]
 #[OA\Server(
-    url: "http://localhost:8030",
-    description: "Servidor local de desarrollo"
+    url: "/",
+    description: "Mismo origen que esta documentación"
 )]
 class Controller extends BaseController
 {
