@@ -1,7 +1,35 @@
-# Ecosistema: Next.js (frontend) + Laravel/PHP-FPM + Nginx (backend) + MySQL.
-# Fase 4: base de datos + backend (PHP-FPM + Nginx) + frontend (Next.js).
+# =============================================================================
+# Ecosistema e-commerce: Next.js (frontend) + Laravel/PHP-FPM + Nginx (backend) + MySQL
+#
+#   navegador ──► frontend :3000 ──(frontend_net)──► nginx :8080 ──► app :9000 ──► db :3306
+#                                                      (backend_net)
+#
+# Redes:
+#   frontend_net  frontend <-> nginx. El frontend NO puede alcanzar app ni db.
+#   backend_net   nginx <-> app <-> db. La base de datos no tiene salida al frontend.
+#
+# Puertos publicados en el host (solo estos dos):
+#   ${FRONTEND_PORT:-3000}  tienda (Next.js)
+#   ${API_PORT:-8030}       API Laravel y Swagger (/docs) a través de Nginx
+# =============================================================================
+
+# Rotación de logs: evita que los logs de los contenedores crezcan sin límite
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Endurecimiento para los contenedores que corren sin root (app, nginx, frontend):
+# sin capabilities de Linux y sin posibilidad de ganar privilegios.
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 services:
+  # --- Base de datos ---------------------------------------------------------
   db:
     image: mysql:8.0
     container_name: ecommerce_db
@@ -13,7 +41,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:?Define MYSQL_DATABASE en .env}
       MYSQL_USER: ${MYSQL_USER:?Define MYSQL_USER en .env}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en .env}
-    # 3306 solo es visible dentro de la red de Docker: NO se publica al host.
+    # 3306 solo es visible dentro de backend_net: NO se publica al host.
     expose:
       - "3306"
     volumes:
@@ -27,11 +55,17 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    logging: *default-logging
     networks:
       - backend_net
 
   # --- Backend Laravel: PHP-FPM (solo accesible desde Nginx, puerto 9000 interno) ---
   app:
+    <<: *hardening
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -67,11 +101,17 @@ services:
       timeout: 3s
       retries: 10
       start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    logging: *default-logging
     networks:
       - backend_net
 
-  # --- Nginx: único punto de entrada HTTP de la API ---
+  # --- Nginx: único punto de entrada HTTP de la API ---------------------------
   nginx:
+    <<: *hardening
     build:
       context: ./backend
       dockerfile: nginx/Dockerfile
@@ -83,11 +123,18 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    logging: *default-logging
     networks:
-      - backend_net
+      - frontend_net   # lo alcanza el frontend
+      - backend_net    # él alcanza a app
 
-  # --- Frontend Next.js (servidor standalone) ---
+  # --- Frontend Next.js (servidor standalone) ---------------------------------
   frontend:
+    <<: *hardening
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -105,12 +152,21 @@ services:
     depends_on:
       nginx:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    logging: *default-logging
     networks:
-      - backend_net
+      - frontend_net
 
 volumes:
   db_data:
 
+# Ninguna red es "internal" a propósito: la API necesita salir a internet para
+# hablar con Stripe, y el frontend para optimizar imágenes de picsum.photos.
 networks:
+  frontend_net:
+    driver: bridge
   backend_net:
     driver: bridge
