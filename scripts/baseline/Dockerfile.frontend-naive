@@ -1,0 +1,12 @@
+# Dockerfile de REFERENCIA (no se usa en producción): el enfoque "ingenuo" de una
+# sola etapa, con la imagen completa de Node y todo el proyecto dentro. Sirve solo
+# para comparar su tamaño contra frontend/Dockerfile (multi-stage + standalone).
+FROM node:22
+WORKDIR /app
+RUN npm install -g pnpm@11.28.9
+COPY . .
+RUN pnpm install --frozen-lockfile
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+RUN pnpm build
+CMD ["pnpm", "start"]
