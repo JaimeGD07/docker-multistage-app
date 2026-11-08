@@ -1,0 +1,58 @@
+
+==================== 1. TAMAÑO DE IMÁGENES ====================
+REPOSITORY                              TAG             SIZE
+ecommerce-frontend                      latest          297MB
+ecommerce-api                           latest          210MB
+ecommerce-nginx                         latest          73.7MB
+
+==================== 1b. REFERENCIA: frontend de una sola etapa (node:22 completo) ====================
+REPOSITORY           TAG       SIZE
+ecommerce-frontend   naive     2.74GB
+ecommerce-frontend   latest    297MB
+
+==================== 2. USUARIO CON EL QUE CORRE CADA CONTENEDOR (no debe ser root) ====================
+app        -> www-data
+nginx      -> nginx
+frontend   -> node
+
+==================== 3. LO QUE NO DEBE ESTAR EN LAS IMÁGENES FINALES ====================
+[app] composer / git / phpunit / compiladores:
+  composer  no está (OK)
+  git       no está (OK)
+  gcc       no está (OK)
+  make      no está (OK)
+  phpunit   no está (OK)
+  .env      no está (OK)
+[frontend] pnpm / código fuente / TypeScript:
+  pnpm      no está (OK)
+  npm       /usr/local/bin/npm
+  src/      no está (OK)
+  .env      no está (OK)
+
+==================== 4. CAPAS MÁS GRANDES (app y frontend) ====================
+[ecommerce-api:latest]
+4.1kB	RUN /bin/sh -c mkdir -p storage/framework/cache/data storage/framework/sessions              storage/fra
+53.2kB	COPY --chown=www-data:www-data /app/bootstrap/cache ./bootstrap/cache # buildkit
+938kB	COPY --chown=www-data:www-data . . # buildkit
+63.5MB	COPY --chown=www-data:www-data /app/vendor ./vendor # buildkit
+4.1kB	WORKDIR /var/www/html
+[ecommerce-frontend:latest]
+32.8kB	COPY --chown=node:node /app/public ./public # buildkit
+1.02MB	COPY --chown=node:node /app/.next/static ./.next/static # buildkit
+44MB	COPY --chown=node:node /app/.next/standalone ./ # buildkit
+8.19kB	WORKDIR /app
+229kB	RUN /bin/sh -c apk add --no-cache libc6-compat # buildkit
+
+==================== 5. CACHÉ DE CAPAS: reconstrucción tras un cambio de código ====================
+(se crea un archivo temporal que invalida solo la capa del código; se borra al terminar)
+  app: reconstrucción con caché = 50 s
+  frontend: reconstrucción con caché = 97 s
+  (resultado de referencia: la primera construcción desde cero tardó ~15 min, casi todo descarga de imágenes base)
+
+==================== 6. ESTADO FINAL ====================
+SERVICE    STATUS
+app        Up 26 minutes (healthy)
+db         Up 26 minutes (healthy)
+frontend   Up 25 minutes (healthy)
+nginx      Up 25 minutes (healthy)
+AVISO: hay cambios sin commitear
