@@ -1,6 +1,6 @@
 # Ecosistema e-commerce en Docker — imágenes multi-stage para producción
 
-Actividad evaluada **Tarea 20** · Kodigo Full Stack Jr. · *Ingeniería de Imágenes Eficientes: Refactorización Multi-stage y Optimización de Capas en Docker*
+*Ingeniería de Imágenes Eficientes: Refactorización Multi-stage y Optimización de Capas en Docker*
 
 Este repositorio contiene un ecosistema de tres servicios, listo para producción y levantable con **un solo comando** (`docker compose up -d --build`):
 
